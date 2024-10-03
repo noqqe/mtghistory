@@ -106,7 +106,6 @@ func uploadPage(c *gin.Context) {
 
 func historyPage(c *gin.Context) {
 	var params Params
-	log.Println("Params: ", params)
 	if err := c.ShouldBindUri(&params); err != nil {
 		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
 			"title": "Magic's History",

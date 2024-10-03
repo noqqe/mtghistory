@@ -1,4 +1,4 @@
-module github.com/noqqe/mtgdots
+module github.com/noqqe/mtghistory
 
 go 1.22.6
 
