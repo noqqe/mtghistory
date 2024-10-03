@@ -1,0 +1,43 @@
+{{ template "header" . }}
+
+  <div class="maincontainer">
+  <h3>About</h3>
+  <p>Visualize how much of Magic's history you own</p>
+  <p>Upload your collection in CSV format and get the result like this: <a href="/history/e26f60f502f111cc7dd2bbca6674d7f8">my collection</a>.</p>
+  <br/>
+
+  <form action="/upload" enctype="multipart/form-data" method="POST">
+    <h3>Upload</h3>
+    <label for="fileField" class="button input-file">
+      Choose...
+    </label>
+    <input type="file" id="fileField" name="file" class="input-file" accept=".csv"/>
+    <input type="submit" value="Go">
+  </form>
+  </div>
+
+  <div class="maincontainer">
+  <h3>Format</h3>
+  <p>As this site is currently in beta, the only csv file format is the following:</p>
+  <pre><code>
+  Set Code, Collector Number
+  ulg,1
+  dsk,6
+  mh2,46
+  </code></pre>
+  <p>Other formats (manabox, moxfield, ...) will likely be supported in the future</p>
+  <p>The scryfall filter used to generate a list of all cards is:</p>
+  <pre><code>
+  (st:masters or st:core or st:expansion) 
+  -set:plst lang:en unique:prints game:paper
+  </code></pre>
+
+  </div>
+
+  <div class="maincontainer">
+  <h3>Thank you</h3>
+  <p>to scryfall.com and its community &hearts;<p>
+
+  </div>
+
+{{ template "footer" . }}

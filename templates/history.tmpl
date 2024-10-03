@@ -1,0 +1,22 @@
+{{ template "header" . }}
+<p>You own {{.owned}} unique cards out of {{.total}} unique cards in Magic's history!</p>
+<p>That's {{.percentage}}% of all cards!</p>
+<p>Feel free to share your results with your friends! Here's your <a href="{{.hash}}">link</a></p>
+
+<script>
+  userCards = [
+  {{ range .usercards }}
+    "{{.}}",
+  {{end}}
+  ]
+</script>
+
+{{range .years}}
+<div class="graphcontainer">
+  <h2 class="hr-lines">{{.}}</h2>
+  <canvas id="{{.}}"></canvas>
+</div>
+{{end}}
+
+<script src="/assets/script.js"></script>
+{{ template "footer" . }}

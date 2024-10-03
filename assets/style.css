@@ -1,0 +1,111 @@
+html {
+  background: #282a36;
+}
+
+.header img {
+  float: left;
+  width: 120px;
+  height: 120px;
+}
+
+.header h1 {
+  font-size: 60px;
+  font-family: 'DM Serif Display', serif;
+  color: #bd93f9;
+  margin: auto;
+  text-align: center;
+}
+
+canvas {
+  width: 100%;
+  object-fit: contain;
+}
+
+p {
+  margin-bottom: 0.5em;
+  color: #f8f8f2;
+}
+
+.section {
+  max-width: 1200px;
+  margin: auto;
+  margin: auto;
+  text-align: center;
+}
+
+.maincontainer {
+  max-width: 400;
+  margin: auto;
+  text-align: left;
+}
+
+.content {
+  padding-bottom: 0.5em;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.footer {
+  padding-top: 1em;
+}
+
+.graphcontainer {
+  max-width: 1200px;
+  margin: auto;
+}
+
+@media screen and (max-width: 600px) {
+  .header img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .header h1 {
+    font-size: 35px;
+    top: 25px;
+    font-family: 'DM Serif Display', serif;
+    color: #bd93f9;
+    margin-bottom: 40px;
+  }
+}
+
+h2 {
+  font-size: 1.5em;
+  font-family: 'DM Serif Display', serif;
+  color: #ff79c6;
+  margin-bottom: 0px;
+}
+
+
+.hr-lines {
+  position: relative;
+  text-align: center;
+}
+
+.hr-lines:before {
+  content: " ";
+  height: 2px;
+  width: 45%;
+  background: #44475a;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 0;
+}
+
+.hr-lines:after {
+  content: " ";
+  height: 2px;
+  width: 45%;
+  background: #44475a;
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 0;
+}
+
+input[type=file].input-file {
+  visibility: hidden;
+  width: 15rem;
+  margin-left: -15rem;
+}

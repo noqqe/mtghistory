@@ -1,0 +1,28 @@
+# https://taskfile.dev
+
+version: 3
+
+tasks:
+  build:
+    cmds:
+      - go build -ldflags "-X main.Version=`git describe --tags`"  -v .
+    sources:
+      - "main.go"
+    generates:
+      - "./main"
+
+  run:
+    deps: [build]
+    cmds:
+      - ./main
+
+  release:
+    cmds:
+      - git tag
+      - read -p "Version v1.1.1 " version ; git tag $version ; docker build -t ghcr.io/noqqe/mtghistory:$version . ;  docker push ghcr.io/noqqe/mtghistory:$version
+      - git push --tags
+    interactive: true
+
+  default:
+    cmds:
+      - task: build

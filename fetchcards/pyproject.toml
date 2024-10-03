@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "mtgdots"
+version = "0.1.0"
+description = ""
+authors = ["Florian Baumann <flo@noqqe.de>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+loguru = "^0.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
