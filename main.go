@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/hex"
@@ -17,27 +16,6 @@ import (
 
 type Params struct {
 	Hash string `uri:"hash" binding:"required"`
-}
-
-func loadAllCards(filename string) ([]string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	var lines []string
-
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to scan file: %w", err)
-	}
-
-	return lines, nil
 }
 
 func loadUserCards(filename string) ([]string, error) {
@@ -80,8 +58,8 @@ func checkIfCardExists(card string, my_cards []string) bool {
 	return false
 }
 
+// uploadPage handles the file upload
 func uploadPage(c *gin.Context) {
-
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
@@ -104,6 +82,7 @@ func uploadPage(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/history/"+hashname)
 }
 
+// historyPage handles the history page
 func historyPage(c *gin.Context) {
 	var params Params
 	if err := c.ShouldBindUri(&params); err != nil {
@@ -121,8 +100,14 @@ func historyPage(c *gin.Context) {
 		return
 	}
 
-	// static for now
+	// TODO: static for now. Load from json in assets folder
 	totalCards := 40201
+
+	// TODO: static for now. Load from json in assets folder
+	years := []int{}
+	for i := 1993; i <= 2024; i++ {
+		years = append(years, i)
+	}
 
 	c.HTML(http.StatusOK, "history.tmpl", gin.H{
 		"title":      "Magic's History",
@@ -131,39 +116,7 @@ func historyPage(c *gin.Context) {
 		"total":      totalCards,
 		"percentage": fmt.Sprintf("%.02f", float64(len(userCards))/float64(totalCards)*100),
 		"hash":       params.Hash,
-		"years": []int{2024,
-			2023,
-			2022,
-			2021,
-			2020,
-			2019,
-			2018,
-			2017,
-			2016,
-			2015,
-			2014,
-			2013,
-			2012,
-			2011,
-			2010,
-			2009,
-			2008,
-			2007,
-			2006,
-			2005,
-			2004,
-			2003,
-			2002,
-			2001,
-			2000,
-			1999,
-			1998,
-			1997,
-			1996,
-			1995,
-			1994,
-			1993,
-		},
+		"years":      years,
 	})
 }
 
