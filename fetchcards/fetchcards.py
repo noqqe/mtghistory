@@ -5,6 +5,11 @@ import requests
 import json
 from loguru import logger
 
+url = 'https://api.scryfall.com/cards/search?order=released&dir=desc&q=(st:masters%20or%20st:core%20or%20st:expansion)%20-set:plst%20lang:en%20unique:prints%20game:paper'
+filepath = '../assets/allcards.json'
+all_cards = {} 
+
+# configure logger
 logger.remove()
 logger.add(
     sys.stdout,
@@ -13,9 +18,14 @@ logger.add(
     filter=lambda record: True,  # Include all records
 )
 
-all_cards = {} 
-
-url = 'https://api.scryfall.com/cards/search?order=released&dir=desc&q=(st:masters%20or%20st:core%20or%20st:expansion)%20-set:plst%20lang:en%20unique:prints%20game:paper'
+# check if we have permission to write to the file
+try:
+  open(filepath, 'w')
+except:
+  logger.error(f"Permission denied or directory not existing to {filepath}")
+  sys.exit(1)
+  
+# Fetch all cards from scryfall
 response = requests.get(url).json()
 cards = response["data"]
 
@@ -28,7 +38,7 @@ for card in  cards:
     all_cards[year] = []
   all_cards[year].append(card['set']+"/"+card['collector_number'])
 
-# fucking pagination
+# pagination
 while response["has_more"]:
   c = c + 1
   logger.info(f"Fetching page {c}")
@@ -45,5 +55,5 @@ while response["has_more"]:
 
 
 # save all_cards to disk as json
-with open('assets/allcards.json', 'w') as fp:
+with open('../assets/allcards.json', 'w') as fp:
     json.dump(all_cards, fp)
