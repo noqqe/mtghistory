@@ -50,22 +50,32 @@ p {
 }
 
 .graphcontainer {
+  padding: 10 10 10 10;
   max-width: 1200px;
   margin: auto;
+  text-align: left;
+  line-height: 1em;
 }
 
 @media screen and (max-width: 600px) {
-  .header img {
-    width: 100px;
-    height: 100px;
-  }
-
   .header h1 {
-    font-size: 35px;
+    font-size: 3em;
     top: 25px;
     font-family: 'DM Serif Display', serif;
     color: #bd93f9;
-    margin-bottom: 40px;
+  }
+
+  circle {
+    transform: scale(0.6, 0.6);
+  }
+
+  .circle {
+    margin: -5px -5px -5px 0px;
+  }
+
+  .graphcontainer {
+    line-height: 0.3em;
+    padding: 10 10 10 10;
   }
 }
 
@@ -75,7 +85,6 @@ h2 {
   color: #ff79c6;
   margin-bottom: 0px;
 }
-
 
 .hr-lines {
   position: relative;

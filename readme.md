@@ -1,0 +1,2 @@
+        {{ $cardOwned := checkIfOwned $card .usercards }}
+

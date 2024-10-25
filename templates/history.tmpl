@@ -3,20 +3,26 @@
 <p>That's {{.percentage}}% of all cards!</p>
 <p>Feel free to share your results with your friends! Here's your <a href="{{.hash}}">link</a></p>
 
-<script>
-  userCards = [
-  {{ range .usercards }}
-    "{{.}}",
-  {{end}}
-  ]
-</script>
-
-{{range .years}}
+{{ $usercards := .usercards}}
+{{range $cards := .allcards}}
 <div class="graphcontainer">
-  <h2 class="hr-lines">{{.}}</h2>
-  <canvas id="{{.}}"></canvas>
+  <h2 class="hr-lines">{{$cards.Year}}</h2>
+  <div id="graph{{$cards.Year}}" class="graph">
+    {{range $card := $cards.Cards}}
+      <span class="circle">
+      <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg">
+        {{ $foo := (checkIfOwned $card $usercards ) }}
+        {{ if $foo }}
+          <circle r="5" cx="5" cy="5" fill="#50fa7b">
+        {{else}}
+          <circle r="5" cx="5" cy="5" fill="#44475a">
+        {{end}}
+     </svg>
+     </span>
+   {{end}}
+  </div>
 </div>
+
 {{end}}
 
-<script src="/assets/script.js"></script>
 {{ template "footer" . }}

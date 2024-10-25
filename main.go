@@ -4,12 +4,14 @@ import (
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,9 +20,35 @@ type Params struct {
 	Hash string `uri:"hash" binding:"required"`
 }
 
-func loadUserCards(filename string) ([]string, error) {
+type UserCards []string
 
-	var userCards []string
+type AllCards []struct {
+	Year  string   `json:"year"`
+	Cards []string `json:"cards"`
+}
+
+func loadAllCards(filename string) (AllCards, error) {
+	file, err := os.Open(filename)
+
+	// Checks for the error
+	if err != nil {
+		err := fmt.Errorf("failed to open file: %w", err)
+		return nil, err
+	}
+
+	// Closes the file
+	defer file.Close()
+	byteValue, _ := io.ReadAll(file)
+
+	var result AllCards
+	json.Unmarshal(byteValue, &result)
+
+	return result, nil
+}
+
+func loadUserCards(filename string) (UserCards, error) {
+
+	var userCards UserCards
 	file, err := os.Open("./uploads/" + filename)
 
 	// Checks for the error
@@ -45,12 +73,11 @@ func loadUserCards(filename string) ([]string, error) {
 	for _, row := range records {
 		userCards = append(userCards, fmt.Sprintf("%s/%s", row[0], row[1]))
 	}
-	print(userCards)
 	return userCards, nil
 }
 
-func checkIfCardExists(card string, my_cards []string) bool {
-	for _, a := range my_cards {
+func checkIfOwned(card string, userCards []string) bool {
+	for _, a := range userCards {
 		if a == card {
 			return true
 		}
@@ -83,41 +110,42 @@ func uploadPage(c *gin.Context) {
 }
 
 // historyPage handles the history page
-func historyPage(c *gin.Context) {
-	var params Params
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
-			"title": "Magic's History",
+func historyPage(allCards AllCards) gin.HandlerFunc {
+
+	fn := func(c *gin.Context) {
+
+		// Get the hash from the URL
+		var params Params
+		if err := c.ShouldBindUri(&params); err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title": "Magic's History",
+			})
+			return
+		}
+
+		// Load user cards
+		userCards, err := loadUserCards(params.Hash)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title": "Magic's History",
+			})
+			return
+		}
+
+		// TODO: static for now. Load from json in assets folder
+		totalCards := 40201
+
+		c.HTML(http.StatusOK, "history.tmpl", gin.H{
+			"title":      "Magic's History",
+			"usercards":  userCards,
+			"allcards":   allCards,
+			"owned":      len(userCards),
+			"total":      totalCards,
+			"percentage": fmt.Sprintf("%.02f", float64(len(userCards))/float64(totalCards)*100),
+			"hash":       params.Hash,
 		})
-		return
 	}
-
-	userCards, err := loadUserCards(params.Hash)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
-			"title": "Magic's History",
-		})
-		return
-	}
-
-	// TODO: static for now. Load from json in assets folder
-	totalCards := 40201
-
-	// TODO: static for now. Load from json in assets folder
-	years := []int{}
-	for i := 1993; i <= 2024; i++ {
-		years = append(years, i)
-	}
-
-	c.HTML(http.StatusOK, "history.tmpl", gin.H{
-		"title":      "Magic's History",
-		"usercards":  userCards,
-		"owned":      len(userCards),
-		"total":      totalCards,
-		"percentage": fmt.Sprintf("%.02f", float64(len(userCards))/float64(totalCards)*100),
-		"hash":       params.Hash,
-		"years":      years,
-	})
+	return gin.HandlerFunc(fn)
 }
 
 func landingPage(c *gin.Context) {
@@ -127,9 +155,18 @@ func landingPage(c *gin.Context) {
 }
 
 func main() {
+
 	router := gin.Default()
+	router.SetFuncMap(template.FuncMap{
+		"checkIfOwned": checkIfOwned,
+	})
 	router.LoadHTMLGlob("templates/*.tmpl")
 	router.Static("/assets", "./assets")
+
+	allCards, err := loadAllCards("./assets/allcards.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Landing page
 	router.GET("/", landingPage)
@@ -138,7 +175,7 @@ func main() {
 	router.POST("/upload", uploadPage)
 
 	// History page
-	router.GET("/history/:hash", historyPage)
+	router.GET("/history/:hash", historyPage(allCards))
 
 	router.Run("0.0.0.0" + ":" + strconv.FormatUint(8080, 10))
 }

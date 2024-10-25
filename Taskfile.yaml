@@ -9,12 +9,12 @@ tasks:
     sources:
       - "main.go"
     generates:
-      - "./main"
+      - "./mtghistory"
 
   run:
     deps: [build]
     cmds:
-      - ./main
+      - ./mtghistory
 
   release:
     cmds:
