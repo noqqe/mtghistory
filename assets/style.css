@@ -29,7 +29,6 @@ p {
 .section {
   max-width: 1200px;
   margin: auto;
-  margin: auto;
   text-align: center;
 }
 
@@ -55,28 +54,6 @@ p {
   margin: auto;
   text-align: left;
   line-height: 1em;
-}
-
-@media screen and (max-width: 600px) {
-  .header h1 {
-    font-size: 3em;
-    top: 25px;
-    font-family: 'DM Serif Display', serif;
-    color: #bd93f9;
-  }
-
-  circle {
-    transform: scale(0.6, 0.6);
-  }
-
-  .circle {
-    margin: -5px -5px -5px 0px;
-  }
-
-  .graphcontainer {
-    line-height: 0.3em;
-    padding: 10 10 10 10;
-  }
 }
 
 h2 {
@@ -117,4 +94,35 @@ input[type=file].input-file {
   visibility: hidden;
   width: 15rem;
   margin-left: -15rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .header h1 {
+    font-size: 3em;
+  }
+
+  .section {
+    max-width: 95%;
+  }
+
+  circle {
+    transform: scale(0.6, 0.6);
+  }
+
+  .circle {
+    margin: -5px -5px -5px 0px;
+  }
+
+  .graphcontainer {
+    line-height: 0.3em;
+    padding: 0 0 0 0;
+  }
+
+  .hr-lines::after {
+    width: 40%;
+  }
+
+  .hr-lines::before {
+    width: 40%;
+  }
 }
