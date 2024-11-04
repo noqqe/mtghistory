@@ -5,33 +5,38 @@
   <p>Visualize how much of Magic's history you own</p>
   <p>Upload your collection in CSV format and get the result like this: <a href="/history/e26f60f502f111cc7dd2bbca6674d7f8">my collection</a>.</p>
   <br/>
+  </div>
 
+  <div class="maincontainer">
+  <h3>Upload your collection</h3>
   <form action="/upload" enctype="multipart/form-data" method="POST">
-    <h3>Upload</h3>
+  <fieldset>
+    <label for="format">Format</label>
+    <select id="format" name="format">
+      <option value="moxfield">Moxfield</option>
+      <option value="manabox">Manabox</option>
+    </select>
+
+    <label for="fileField">File</label>
     <label for="fileField" class="button input-file">
-      Choose...
+      File
     </label>
-    <input type="file" id="fileField" name="file" class="input-file" accept=".csv"/>
-    <input type="submit" value="Go">
+    <input type="file" id="fileField" name="file" class="button-outline input-file" accept=".csv" />
+    <br/>
+
+    <label for="submitField">Submit</label>
+    <input class="button-primary" id="submitField" type="submit" value="Go">
+    <fieldset>
   </form>
   </div>
 
   <div class="maincontainer">
-  <h3>Format</h3>
-  <p>As this site is currently in beta, the only csv file format is the following:</p>
-  <pre><code>
-  Set Code, Collector Number
-  ulg,1
-  dsk,6
-  mh2,46
-  </code></pre>
-  <p>Other formats (manabox, moxfield, ...) will likely be supported in the future</p>
+  <h3>What cards?</h3>
   <p>The scryfall filter used to generate a list of all cards is:</p>
   <pre><code>
-  (st:masters or st:core or st:expansion) 
-  -set:plst lang:en unique:prints game:paper
+(st:masters or st:core or st:expansion) 
+-set:plst lang:en unique:prints game:paper
   </code></pre>
-
   </div>
 
   <div class="maincontainer">

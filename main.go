@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/hex"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -85,27 +87,131 @@ func checkIfOwned(card string, userCards []string) bool {
 	return false
 }
 
-// uploadPage handles the file upload
-func uploadPage(c *gin.Context) {
-	file, err := c.FormFile("file")
+func (uc UserCards) persist(filename string) error {
+	f, err := os.Create(filename)
+
 	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
-		return
+		return err
 	}
 
-	h := md5.New()
-	src, _ := file.Open()
-	defer src.Close()
+	defer f.Close()
 
-	if _, err := io.Copy(h, src); err != nil {
+	for _, card := range uc {
+		f.WriteString(card + "\n")
+	}
+
+	return nil
+}
+
+func convertMoxfieldToCSV(file io.Reader) (UserCards, error) {
+
+	var userCards UserCards
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+
+	// Checks for the error
+	if err != nil {
+		return userCards, err
+	}
+
+	// Moxfield CSV format
+	// Count,Name,Edition,Condition,Language,Foil,Collector Number,Alter,Proxy,Purchase Price
+	for _, row := range records {
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[2]), row[6]))
+	}
+
+	return userCards, nil
+
+}
+
+func convertManaBoxToCSV(file io.Reader) (UserCards, error) {
+
+	var userCards UserCards
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+
+	// Checks for the error
+	if err != nil {
+		return userCards, err
+	}
+
+	// ManaBox CSV format
+	//
+	for _, row := range records {
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[1]), row[3]))
+	}
+
+	return userCards, nil
+
+}
+
+// uploadPage handles the file upload
+func uploadPage(c *gin.Context) {
+
+	var userCards UserCards
+
+	// Get the file from the form
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+			"title":   "Magic's History",
+			"message": "No file uploaded",
+		})
+	}
+
+	// Open the file
+	src, err := file.Open()
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+			"title":   "Magic's History",
+			"message": "Problem with uploaded file",
+		})
+	}
+
+	// Calculate md5 hash of the converted file
+	h := md5.New()
+	var buf bytes.Buffer
+	tr := io.TeeReader(src, &buf)
+	if _, err := io.Copy(h, tr); err != nil {
 		log.Fatal(err)
 	}
 	hashname := hex.EncodeToString(h.Sum(nil))
-	if err := c.SaveUploadedFile(file, "./uploads/"+hashname); err != nil {
-		c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
-		return
+
+	// Check if the format is Moxfield
+	// If yes, convert it to our own format
+	if format := c.PostForm("format"); format == "moxfield" {
+		userCards, err = convertMoxfieldToCSV(&buf)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title":   "Magic's History",
+				"message": "Failed to convert Moxfield CSV",
+			})
+		}
 	}
 
+	// Check if the format is ManaBox
+	// If yes, convert it to our own format
+	if format := c.PostForm("format"); format == "manabox" {
+		userCards, err = convertManaBoxToCSV(&buf)
+
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title":   "Magic's History",
+				"message": "Failed to convert ManaBox CSV",
+			})
+		}
+	}
+
+	// Write the file to the uploads folder
+	err = userCards.persist("./uploads/" + hashname)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+			"title":   "Magic's History",
+			"message": "Cloud not save the file",
+		})
+	}
+
+	// Redirect to the history page
 	c.Redirect(http.StatusFound, "/history/"+hashname)
 }
 
@@ -118,7 +224,8 @@ func historyPage(allCards AllCards) gin.HandlerFunc {
 		var params Params
 		if err := c.ShouldBindUri(&params); err != nil {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
-				"title": "Magic's History",
+				"title":   "Magic's History",
+				"message": fmt.Sprintf("Failed to bind uri: %s", err.Error()),
 			})
 			return
 		}
@@ -127,7 +234,8 @@ func historyPage(allCards AllCards) gin.HandlerFunc {
 		userCards, err := loadUserCards(params.Hash)
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
-				"title": "Magic's History",
+				"title":   "Magic's History",
+				"message": fmt.Sprintf("Failed to load user cards: %s", params.Hash),
 			})
 			return
 		}
@@ -156,17 +264,21 @@ func landingPage(c *gin.Context) {
 
 func main() {
 
-	router := gin.Default()
-	router.SetFuncMap(template.FuncMap{
-		"checkIfOwned": checkIfOwned,
-	})
-	router.LoadHTMLGlob("templates/*.tmpl")
-	router.Static("/assets", "./assets")
-
+	// Load all from pre constructed json
 	allCards, err := loadAllCards("./assets/allcards.json")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Setup new web server
+	router := gin.Default()
+	router.SetFuncMap(template.FuncMap{
+		"checkIfOwned": checkIfOwned,
+	})
+
+	// Load the templates
+	router.LoadHTMLGlob("templates/*.tmpl")
+	router.Static("/assets", "./assets")
 
 	// Landing page
 	router.GET("/", landingPage)
@@ -177,5 +289,6 @@ func main() {
 	// History page
 	router.GET("/history/:hash", historyPage(allCards))
 
+	// Run the server
 	router.Run("0.0.0.0" + ":" + strconv.FormatUint(8080, 10))
 }
