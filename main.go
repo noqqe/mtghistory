@@ -117,7 +117,7 @@ func convertMoxfieldToCSV(file io.Reader) (UserCards, error) {
 	// Moxfield CSV format
 	// Count,Name,Edition,Condition,Language,Foil,Collector Number,Alter,Proxy,Purchase Price
 	for _, row := range records {
-		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[2]), row[6]))
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[3]), row[9]))
 	}
 
 	return userCards, nil
