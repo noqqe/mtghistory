@@ -114,9 +114,13 @@ func convertMoxfieldToCSV(file io.Reader) (UserCards, error) {
 		return userCards, err
 	}
 
+	// Checks for the error
 	// Moxfield CSV format
 	// Count,Name,Edition,Condition,Language,Foil,Collector Number,Alter,Proxy,Purchase Price
 	for _, row := range records {
+		if len(row) < 10 {
+			return userCards, err
+		}
 		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[3]), row[9]))
 	}
 
@@ -138,6 +142,9 @@ func convertManaBoxToCSV(file io.Reader) (UserCards, error) {
 	// ManaBox CSV format
 	//
 	for _, row := range records {
+		if len(row) < 3 {
+			return userCards, err
+		}
 		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[1]), row[3]))
 	}
 
@@ -184,7 +191,7 @@ func uploadPage(c *gin.Context) {
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
 				"title":   "Magic's History",
-				"message": "Failed to convert Moxfield CSV",
+				"message": "Uploaded csv has the wrong format",
 			})
 		}
 	}
@@ -197,7 +204,7 @@ func uploadPage(c *gin.Context) {
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
 				"title":   "Magic's History",
-				"message": "Failed to convert ManaBox CSV",
+				"message": "Uploaded csv has the wrong format",
 			})
 		}
 	}
@@ -236,6 +243,14 @@ func historyPage(allCards AllCards) gin.HandlerFunc {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
 				"title":   "Magic's History",
 				"message": fmt.Sprintf("Failed to load user cards: %s", params.Hash),
+			})
+			return
+		}
+
+		if len(userCards) == 0 {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title":   "Magic's History",
+				"message": "Uploaded csv has the wrong format",
 			})
 			return
 		}
