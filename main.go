@@ -139,13 +139,17 @@ func convertManaBoxToCSV(file io.Reader) (UserCards, error) {
 		return userCards, err
 	}
 
+	if records[0][0] == "Name" {
+		return nil, fmt.Errorf("Please use manabox \"Collection\" export, not \"Binder\" export!")
+	}
+
 	// ManaBox CSV format
 	//
 	for _, row := range records {
 		if len(row) < 3 {
 			return userCards, err
 		}
-		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[1]), row[3]))
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[3]), row[5]))
 	}
 
 	return userCards, nil
@@ -204,7 +208,7 @@ func uploadPage(c *gin.Context) {
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
 				"title":   "Magic's History",
-				"message": "Uploaded csv has the wrong format",
+				"message": err.Error(),
 			})
 		}
 	}
