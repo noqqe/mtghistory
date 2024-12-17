@@ -103,6 +103,31 @@ func (uc UserCards) persist(filename string) error {
 	return nil
 }
 
+func convertArchidektToCSV(file io.Reader) (UserCards, error) {
+
+	var userCards UserCards
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+
+	// Checks for the error
+	if err != nil {
+		return userCards, err
+	}
+
+	// Checks for the error
+	// Moxfield CSV format
+	// Quantity,Name,Finish,Condition,Date Added,Language,Purchase Price,Tags,Edition Name,Edition Code,Multiverse Id,Scryfall ID,Collector Number
+	//  0         1   2        3        4          5         6            7     8             9             10           11         12
+	for _, row := range records {
+		if len(row) < 10 {
+			return userCards, err
+		}
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[9]), row[12]))
+	}
+
+	return userCards, nil
+}
+
 func convertMoxfieldToCSV(file io.Reader) (UserCards, error) {
 
 	var userCards UserCards
@@ -116,7 +141,8 @@ func convertMoxfieldToCSV(file io.Reader) (UserCards, error) {
 
 	// Checks for the error
 	// Moxfield CSV format
-	// Count,Name,Edition,Condition,Language,Foil,Collector Number,Alter,Proxy,Purchase Price
+	// Count,Tradelist Count,Name,Edition,Condition,Language,Foil,Tags,Last Modified,Collector Number,Alter,Proxy,Purchase Price
+	//   0         1          2     3       4           5      6   7     8              9              10     11    12
 	for _, row := range records {
 		if len(row) < 10 {
 			return userCards, err
@@ -144,9 +170,10 @@ func convertManaBoxToCSV(file io.Reader) (UserCards, error) {
 	}
 
 	// ManaBox CSV format
-	//
+	// BinderName,BinName,Setcode,Setname,Collectornumber,Foil,Rarity,Quantity,ManaBoxID,ScryfallID,[..]
+	//   0          1        2        3      4       5             6     7        8        9       10
 	for _, row := range records {
-		if len(row) < 3 {
+		if len(row) < 4 {
 			return userCards, err
 		}
 		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[3]), row[5]))
@@ -154,6 +181,30 @@ func convertManaBoxToCSV(file io.Reader) (UserCards, error) {
 
 	return userCards, nil
 
+}
+
+func convertDeckboxToCSV(file io.Reader) (UserCards, error) {
+
+	var userCards UserCards
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+
+	// Checks for the error
+	if err != nil {
+		return userCards, err
+	}
+
+	// ManaBox CSV format
+	// Count,Tradelist Count,Name,Edition,Edition Code,Card Number,Condition,Language,Foil,[...]
+	//   0      1             2        3      4          5             6          7        8        9
+	for _, row := range records {
+		if len(row) < 6 {
+			return userCards, err
+		}
+		userCards = append(userCards, fmt.Sprintf("%s,%s", strings.ToLower(row[4]), row[5]))
+	}
+
+	return userCards, nil
 }
 
 // uploadPage handles the file upload
@@ -187,6 +238,32 @@ func uploadPage(c *gin.Context) {
 		log.Fatal(err)
 	}
 	hashname := hex.EncodeToString(h.Sum(nil))
+
+	// Check if the format is Archidekt
+	// If yes, convert it to our own format
+	if format := c.PostForm("format"); format == "archidekt" {
+		userCards, err = convertArchidektToCSV(&buf)
+
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title":   "Magic's History",
+				"message": err.Error(),
+			})
+		}
+	}
+
+	// Check if the format is Deckbox
+	// If yes, convert it to our own format
+	if format := c.PostForm("format"); format == "deckbox" {
+		userCards, err = convertDeckboxToCSV(&buf)
+
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.tmpl", gin.H{
+				"title":   "Magic's History",
+				"message": err.Error(),
+			})
+		}
+	}
 
 	// Check if the format is Moxfield
 	// If yes, convert it to our own format
