@@ -337,13 +337,13 @@ func historyPage(allCards AllCards) gin.HandlerFunc {
 		}
 
 		// TODO: static for now. Load from json in assets folder
-		totalCards := 40201
+		totalCards := 41421
 
 		c.HTML(http.StatusOK, "history.tmpl", gin.H{
 			"title":      "Magic's History",
 			"usercards":  userCards,
 			"allcards":   allCards,
-			"owned":      len(userCards),
+			"owned":      len(userCards), // TODO: this is not correct, it just adds all cards no matter if they are from correct set type
 			"total":      totalCards,
 			"percentage": fmt.Sprintf("%.02f", float64(len(userCards))/float64(totalCards)*100),
 			"hash":       params.Hash,
