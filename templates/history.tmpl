@@ -10,14 +10,16 @@
   <div id="graph{{$cards.Year}}" class="graph">
     {{range $card := $cards.Cards}}
       <span class="circle">
-      <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg">
-        {{ $foo := (checkIfOwned $card $usercards ) }}
-        {{ if $foo }}
-          <circle r="5" cx="5" cy="5" fill="#50fa7b">
-        {{else}}
-          <circle r="5" cx="5" cy="5" fill="#44475a">
-        {{end}}
-     </svg>
+        <a href="https://scryfall.com/card/{{ $card }}">
+        <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg">
+          {{ $got := (checkIfOwned $card $usercards ) }}
+          {{ if $got }}
+            <circle r="5" cx="5" cy="5" fill="#50fa7b">
+          {{else}}
+            <circle r="5" cx="5" cy="5" fill="#44475a">
+          {{end}}
+       </svg>
+      </a>
      </span>
    {{end}}
   </div>
