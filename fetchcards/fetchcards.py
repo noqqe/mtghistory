@@ -5,7 +5,7 @@ import requests
 import json
 from loguru import logger
 
-url = 'https://api.scryfall.com/cards/search?order=released&dir=desc&q=(st:masters%20or%20st:core%20or%20st:expansion)%20-set:plst%20lang:en%20unique:prints%20game:paper'
+url = 'https://api.scryfall.com/cards/search?order=released&dir=desc&q=(st:masters%20or%20st:core%20or%20st:expansion)%20-set:plst%20lang:en%20unique:prints%20game:paper%20-legal:future'
 filepath = '../assets/allcards.json'
 all_cards = []
 
