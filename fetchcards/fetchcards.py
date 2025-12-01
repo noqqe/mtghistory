@@ -27,14 +27,14 @@ def verify_write_permission(path):
     logger.error(f"Permission denied or directory not existing to {out_file}")
     sys.exit(1)
 
-def find_oracle_file(bulk_url):
+def find_bulk_file(bulk_url):
   r = requests.get(bulk_url)
   for e in r.json()['data']:
-    if e['type'] == 'oracle_cards':
-      logger.info(f"Found oracle file at {e['download_uri']}")
+    if e['type'] == 'unique_artwork':
+      logger.info(f"Found bulk file at {e['download_uri']}")
       return e['download_uri']
 
-def get_oracle_file(url):
+def get_bulk_file(url):
   """Download a large file and save it to a temporary file."""
   with tempfile.NamedTemporaryFile(delete=False) as temp_file:
     response = requests.get(url, stream=True)
@@ -49,9 +49,9 @@ def get_oracle_file(url):
   return temp_file.name
 
 
-def convert_data(oracle_path):
+def convert_data(bulk_path):
   all_cards = []
-  with open(oracle_path, 'r') as fp:
+  with open(bulk_path, 'r') as fp:
     bulk_data = json.load(fp)
 
   for card in bulk_data:
@@ -85,8 +85,8 @@ def persist_data(path, data):
 
 if __name__ == "__main__":
   verify_write_permission(out_file)
-  file_url = find_oracle_file(bulk_url)
-  oracle_path = get_oracle_file(file_url)
-  cards = convert_data(oracle_path)
+  file_url = find_bulk_file(bulk_url)
+  bulk_path = get_bulk_file(file_url)
+  cards = convert_data(bulk_path)
   persist_data(out_file, cards)
 
