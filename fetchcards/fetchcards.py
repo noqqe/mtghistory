@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+import os
 import sys
-import requests
 import json
 from loguru import logger
 
-url = 'https://api.scryfall.com/cards/search?order=released&dir=desc&q=(st:masters%20or%20st:core%20or%20st:expansion)%20-set:plst%20lang:en%20unique:prints%20game:paper'
-filepath = '../assets/allcards.json'
-all_cards = []
+out_file = '../assets/allcards.json'
+oracle_path = os.path.expanduser('~/Downloads/oracle-cards-20251130220622.json')
+year = '1993'
 
 # configure logger
 logger.remove()
@@ -19,50 +19,46 @@ logger.add(
 )
 
 # check if we have permission to write to the file
-try:
-  open(filepath, 'w')
-except:
-  logger.error(f"Permission denied or directory not existing to {filepath}")
-  sys.exit(1)
-  
-# Fetch all cards from scryfall
-response = requests.get(url).json()
-cards = response["data"]
+def verify_write_permission(path):
+  try:
+    open(out_file, 'w')
+  except:
+    logger.error(f"Permission denied or directory not existing to {out_file}")
+    sys.exit(1)
 
-c = 1
-for card in cards:
-  year = card['released_at'].split("-")[0]
-  logger.info(f"Processing {card['set']}/{card['collector_number']} from {year}")
+def convert_data(oracle_path):
+  all_cards = []
+  with open(oracle_path, 'r') as fp:
+    bulk_data = json.load(fp)
 
-  if not any(d['year'] == year for d in all_cards):
-    logger.warning(f"Added year {year} entry added to all_cards")
-    all_cards.append({"year": year, "cards": [] })
+  for card in bulk_data:
+    if not card['set_type'] in ['core', 'expansion', 'masters']:
+      continue
 
-  year_index = next((index for (index, d) in enumerate(all_cards) if d["year"] == year), None)
-  if year_index is not None:
-    logger.info(f"Adding {card['set']}/{card['collector_number']} to all_cards")
-    all_cards[year_index]["cards"].append(card['set']+"/"+card['collector_number'])
-
-# pagination
-while response["has_more"]:
-  c = c + 1
-  logger.info(f"Fetching page {c}")
-  response = requests.get(response["next_page"]).json()
-  cards = response["data"]
-
-  for card in  cards:
     year = card['released_at'].split("-")[0]
-    logger.info(f"Processing {card['set']}/{card['collector_number']} from {year}")
-
     if not any(d['year'] == year for d in all_cards):
       logger.warning(f"Added year {year} entry added to all_cards")
       all_cards.append({"year": year, "cards": [] })
 
     year_index = next((index for (index, d) in enumerate(all_cards) if d["year"] == year), None)
     if year_index is not None:
-      logger.info(f"Adding {card['set']}/{card['collector_number']} to all_cards")
+      logger.info(f"Adding {card['name']} ({card['set']}/{card['collector_number']}) type {card['set_type']}")
       all_cards[year_index]["cards"].append(card['set']+"/"+card['collector_number'])
 
+    return all_cards
+
+
 # save all_cards to disk as json
-with open('../assets/allcards.json', 'w') as fp:
-    json.dump(all_cards, fp)
+def persist_data(path, data):
+  if len(data) <= 0:
+    logger.error(f"No data to be persisted")
+    sys.exit(1)
+         
+  with open(out_file, 'w') as fp:
+      json.dump(data, fp)
+
+if __name__ == "__main__":
+  verify_write_permission(out_file)
+  cards = convert_data(oracle_path)
+  persist_data(out_file, cards)
+
