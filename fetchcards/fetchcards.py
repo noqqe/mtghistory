@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import json
+import requests
 from loguru import logger
+import tempfile
 
 out_file = '../assets/allcards.json'
-oracle_path = os.path.expanduser('~/Downloads/oracle-cards-20251130220622.json')
+bulk_url = "https://api.scryfall.com/bulk-data"
 year = '1993'
 
 # configure logger
@@ -25,6 +26,28 @@ def verify_write_permission(path):
   except:
     logger.error(f"Permission denied or directory not existing to {out_file}")
     sys.exit(1)
+
+def find_oracle_file(bulk_url):
+  r = requests.get(bulk_url)
+  for e in r.json()['data']:
+    if e['type'] == 'oracle_cards':
+      logger.info(f"Found oracle file at {e['download_uri']}")
+      return e['download_uri']
+
+def get_oracle_file(url):
+  """Download a large file and save it to a temporary file."""
+  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    response = requests.get(url, stream=True)
+
+    if response.status_code == 200:
+      for chunk in response.iter_content(chunk_size=8192):
+        temp_file.write(chunk)
+      logger.info(f"File downloaded and saved to: {temp_file.name}")
+    else:
+      logger.error(f"Failed to download file. Status code: {response.status_code}")
+
+  return temp_file.name
+
 
 def convert_data(oracle_path):
   all_cards = []
@@ -45,7 +68,7 @@ def convert_data(oracle_path):
       logger.info(f"Adding {card['name']} ({card['set']}/{card['collector_number']}) type {card['set_type']}")
       all_cards[year_index]["cards"].append(card['set']+"/"+card['collector_number'])
 
-    return all_cards
+  return all_cards
 
 
 # save all_cards to disk as json
@@ -59,6 +82,8 @@ def persist_data(path, data):
 
 if __name__ == "__main__":
   verify_write_permission(out_file)
+  file_url = find_oracle_file(bulk_url)
+  oracle_path = get_oracle_file(file_url)
   cards = convert_data(oracle_path)
   persist_data(out_file, cards)
 
