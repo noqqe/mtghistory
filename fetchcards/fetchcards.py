@@ -58,6 +58,9 @@ def convert_data(oracle_path):
     if not card['set_type'] in ['core', 'expansion', 'masters']:
       continue
 
+    if any(card['games']) == 'paper':
+      continue
+
     year = card['released_at'].split("-")[0]
     if not any(d['year'] == year for d in all_cards):
       logger.warning(f"Added year {year} entry added to all_cards")
