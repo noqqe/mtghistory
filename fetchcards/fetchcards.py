@@ -71,7 +71,7 @@ def convert_data(oracle_path):
       logger.info(f"Adding {card['name']} ({card['set']}/{card['collector_number']}) type {card['set_type']}")
       all_cards[year_index]["cards"].append(card['set']+"/"+card['collector_number'])
 
-  return all_cards
+  return sorted(all_cards, key=lambda x: x["year"], reverse=True)
 
 
 # save all_cards to disk as json
