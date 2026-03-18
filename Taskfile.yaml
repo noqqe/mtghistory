@@ -3,18 +3,20 @@
 version: 3
 
 tasks:
+
   build:
     cmds:
-      - go build -ldflags "-X main.Version=`git describe --tags`"  -v .
+      - go build -ldflags "-X github.com/noqqe/mtghistory/pkg/mtghistory.Version=`git describe --tags`" -v cmd/mtghistory/mtghistory.go
     sources:
-      - "main.go"
+      - "pkg/mtghistory/**/*.go"
+      - "cmd/mtghistory/mtghistory.go"
     generates:
       - "./mtghistory"
 
   run:
     deps: [build]
     cmds:
-      - ./mtghistory
+      - ./mtghistory {{.CLI_ARGS}}
 
   release:
     cmds:

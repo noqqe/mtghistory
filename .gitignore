@@ -3,5 +3,5 @@
 *.svg
 *.json
 uploads/*
-mtghistory
+./mtghistory
 .task/*

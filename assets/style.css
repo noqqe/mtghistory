@@ -16,9 +16,13 @@ html {
   text-align: center;
 }
 
-canvas {
-  width: 100%;
-  object-fit: contain;
+.button {
+  text-transform: none;
+}
+
+.button + .button {
+  margin-left: 50px;
+  margin-right: 50px;
 }
 
 p {
