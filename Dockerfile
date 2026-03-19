@@ -15,7 +15,6 @@ FROM scratch
 WORKDIR /go/src/app
 COPY --from=builder /go/src/app/ /go/src/app/
 COPY templates /go/src/app/templates
-COPY --from=assets /root/assets /go/src/app/assets
 
 # run
 EXPOSE 8080
