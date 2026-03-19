@@ -15,8 +15,8 @@ RUN go build -ldflags "-X github.com/noqqe/mtghistory/pkg/mtghistory.Version=`gi
 FROM scratch
 WORKDIR /go/src/app
 COPY --from=builder /go/src/app/ /go/src/app/
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build /tmp /tmp
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /tmp /tmp
 COPY templates /go/src/app/templates
 
 # run
