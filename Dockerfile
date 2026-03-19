@@ -1,6 +1,6 @@
 # build go binary
 FROM golang:1.26-alpine AS builder
-RUN apk update && apk add --no-cache git
+RUN apk update && apk add --no-cache git ca-certificates
 WORKDIR /go/src/app
 COPY templates /go/src/app/templates
 COPY assets /go/src/app/assets
